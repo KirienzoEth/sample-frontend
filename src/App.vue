@@ -49,6 +49,31 @@ const modal = createWeb3Modal({
   projectId
 })
 
+async function getMerkleProofForAddress(address) {
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+
+  var raw = JSON.stringify({
+    "type": "isWalletWhitelisted_test",
+    "walletAddress": address
+  });
+
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+
+  return fetch(import.meta.env.VITE_MERKLE_PROOF_API_ENDPOINT, requestOptions)
+    .then(response => response.json())
+    .then(result => result.body.proof)
+    .catch(error => {
+      console.log('error', error)
+      return [];
+    });
+}
+
 export default {
   data() {
     return {
@@ -65,10 +90,10 @@ export default {
       const contract = new ethers.Contract(import.meta.env.VITE_NFT_CONTRACT_ADDRESS, contractABI, walletProvider.getSigner(this.connectedWallet));
       
       const prices = await contract.tiersCost();
+      const proof = await getMerkleProofForAddress(this.connectedWallet);
       const valueToSend = prices.tier1.mul(this.tier1Amount).add(prices.tier2.mul(this.tier2Amount)).add(prices.tier3.mul(this.tier3Amount));
 
-      // TODO: Pass the right proof as the 5th argument
-      await contract.mint(this.tier1Amount, this.tier2Amount, this.tier3Amount, this.connectedWallet, [], { 
+      await contract.mint(this.tier1Amount, this.tier2Amount, this.tier3Amount, this.connectedWallet, proof, { 
         value: valueToSend 
       });
     }
