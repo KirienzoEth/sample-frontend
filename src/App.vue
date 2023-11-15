@@ -85,7 +85,6 @@ export default {
   },
   methods: {
     async mint() {
-      this.successMessage, this.errorMesssage = '';
       const walletProvider = modal.getWalletProvider()
       const contract = new ethers.Contract(import.meta.env.VITE_NFT_CONTRACT_ADDRESS, contractABI, walletProvider.getSigner(this.connectedWallet));
       
